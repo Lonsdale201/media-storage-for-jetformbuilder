@@ -1,5 +1,7 @@
 # Media Storage for JetFormBuilder
 
+Stable tag: 1.0
+
 Sync JetFormBuilder file uploads to external cloud storage providers (Dropbox, Google Drive, Cloudflare R2). Supports automatic token refresh, per-form overrides, file-type filtering, size limits, and a flexible folder-template system.
 
 ---
