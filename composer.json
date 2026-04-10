@@ -1,0 +1,14 @@
+{
+  "name": "lonsdale/media-storage-for-jetformbuilder",
+  "description": "Media storage add-on for JetFormBuilder",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "autoload": {
+    "psr-4": {
+      "MediaStorage\\JetFormBuilder\\": "includes/"
+    }
+  },
+  "require": {
+    "spatie/dropbox-api": "^1.23"
+  }
+}
