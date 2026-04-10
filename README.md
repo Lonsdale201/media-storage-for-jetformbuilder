@@ -10,7 +10,7 @@ Sync JetFormBuilder file uploads to external cloud storage providers (Dropbox, G
 
 Install this plugin like any other WordPress plugin: upload it to `wp-content/plugins`, then activate it from **Plugins -> Installed Plugins**.
 
-**Requirements:** JetFormBuilder must be installed and active. PHP 7.4+, WordPress 6.0+.
+**Requirements:** JetFormBuilder must be installed and active. PHP 8.0+, WordPress 6.0+.
 
 ---
 
