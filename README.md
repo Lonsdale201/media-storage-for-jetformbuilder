@@ -18,13 +18,13 @@ All settings are managed from **JetFormBuilder -> Settings -> Media Storage**.
 
 ### General section
 
-| Setting | Description |
-|---------|-------------|
-| **Delete original file** | Remove the local WordPress copy after a successful sync to all enabled providers. Default: off. |
-| **Default folder structure** | Template that determines the remote folder path. See [Folder Templates](#folder-templates) below. Default: `JetFormBuilder/%formname%/%currentdate%`. |
-| **Max file size (MB)** | Files exceeding this limit are silently skipped (submission still succeeds). Set `0` or `-1` for unlimited. Supports decimals like `1.5` or `0,5`. Default: no limit. |
-| **Allowed file types** | Multi-select checkbox panel grouped by category (Images, Audio, Video, Documents, Text). Only checked types are synced to providers. **Leave empty to allow all types.** The plugin also performs a double-extension check (e.g. `evil.php.jpg`) to prevent bypasses. |
-| **Enable debug logs** | Write every upload attempt (success/failure) to the PHP error log. Never includes credential data. Works independently of `WP_DEBUG`. |
+| Setting                      | Description                                                                                                                                                                                                                                                           |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Delete original file**     | Remove the local WordPress copy after a successful sync to all enabled providers. Default: off.                                                                                                                                                                       |
+| **Default folder structure** | Template that determines the remote folder path. See [Folder Templates](#folder-templates) below. Default: `JetFormBuilder/%formname%/%currentdate%`.                                                                                                                 |
+| **Max file size (MB)**       | Files exceeding this limit are silently skipped (submission still succeeds). Set `0` or `-1` for unlimited. Supports decimals like `1.5` or `0,5`. Default: no limit.                                                                                                 |
+| **Allowed file types**       | Multi-select checkbox panel grouped by category (Images, Audio, Video, Documents, Text). Only checked types are synced to providers. **Leave empty to allow all types.** The plugin also performs a double-extension check (e.g. `evil.php.jpg`) to prevent bypasses. |
+| **Enable debug logs**        | Write every upload attempt (success/failure) to the PHP error log. Never includes credential data. Works independently of `WP_DEBUG`.                                                                                                                                 |
 
 ### Per-form overrides
 
@@ -43,15 +43,15 @@ When set to "inherit" (or left empty), the form uses the global setting.
 
 The folder template determines the directory structure inside your cloud provider. Both the global default and per-form/per-provider overrides accept the same macros:
 
-| Macro | Output | Example |
-|-------|--------|---------|
-| `%formid%` | `form-{id}` | `form-42` |
-| `%formname%` | Form post title | `Contact Form` |
-| `%currentdate%` | `Y/m/d` | `2026/04/10` |
-| `%currentyear%` | 4-digit year | `2026` |
-| `%currentmonth%` | 2-digit month | `04` |
-| `%currentday%` | 2-digit day | `10` |
-| `%fieldslug%` | Sanitized field name | `upload_photo` |
+| Macro            | Output               | Example        |
+| ---------------- | -------------------- | -------------- |
+| `%formid%`       | `form-{id}`          | `form-42`      |
+| `%formname%`     | Form post title      | `Contact Form` |
+| `%currentdate%`  | `Y/m/d`              | `2026/04/10`   |
+| `%currentyear%`  | 4-digit year         | `2026`         |
+| `%currentmonth%` | 2-digit month        | `04`           |
+| `%currentday%`   | 2-digit day          | `10`           |
+| `%fieldslug%`    | Sanitized field name | `upload_photo` |
 
 **Default template:** `JetFormBuilder/%formname%/%currentdate%`
 
@@ -102,16 +102,20 @@ add_filter( 'media_storage_for_jetformbuilder/cloudflare_r2/path', $callback, 10
 **Manual fallback (only if the popup flow is unavailable):**
 
 Build an authorization URL in the browser:
+
 ```
 https://www.dropbox.com/oauth2/authorize?client_id=APP_KEY&response_type=code&redirect_uri=REDIRECT_URI&token_access_type=offline
 ```
+
 Log in, approve the app, and note the `code` parameter in the redirected URL. Exchange the code:
+
 ```
 POST https://api.dropboxapi.com/oauth2/token
 Content-Type: application/x-www-form-urlencoded
 
 code=AUTH_CODE&grant_type=authorization_code&client_id=APP_KEY&client_secret=APP_SECRET&redirect_uri=REDIRECT_URI
 ```
+
 The response contains `access_token` and `refresh_token`. Copy them into the settings.
 
 ---
@@ -136,6 +140,7 @@ The response contains `access_token` and `refresh_token`. Copy them into the set
 5. Save and continue.
 
 > **Important:** By default the app is in **Testing** mode. In testing mode only users explicitly added as **test users** can authorize. If you want to use this in production:
+>
 > - Either add yourself (and any admin who needs to generate tokens) as a test user under **OAuth consent screen -> Test users**
 > - **Or publish the app** by clicking **Publish App** on the consent screen page. Publishing removes the test-user restriction. For internal/personal use this is fine — Google may request verification only if you use sensitive scopes or have many users, but `drive.file` is not a sensitive scope.
 
@@ -205,6 +210,16 @@ The plugin automatically refreshes the access token (valid for ~1 hour) using th
 3. **After** the form is processed, this plugin collects the uploaded files.
 4. Files are filtered by size limit and allowed file types (global, then per-form overrides).
 5. Each enabled provider receives the filtered files, uploaded to the resolved folder path.
-6. If **Delete original** is on, local copies are removed after all providers succeed.
+6. If **Delete original** is on, local copies are removed — but **only** if every enabled provider uploaded successfully.
+
+> **Safety net:** If any provider fails (expired token, invalid credentials, network error), the plugin keeps all original files regardless of the "Delete original" setting. This prevents data loss when a provider is misconfigured or temporarily unavailable. The failure is logged when debug mode is enabled.
 
 The plugin hooks into `jet-form-builder/form-handler/after-send` — it never interferes with the core JetFormBuilder upload process. If a file is filtered out (wrong type, too large), the form submission still succeeds normally; the file simply isn't synced to the provider.
+
+---
+
+## Roadmap
+
+### v1.1
+
+- **Background uploads via Action Scheduler** — Currently, file uploads to providers run synchronously during form submission, which can cause noticeable delays when multiple files are attached. In v1.1, uploads will be queued as background jobs so the form returns instantly to the user.
